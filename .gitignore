@@ -1,0 +1,26 @@
+.DS_Store
+.idea
+*.log
+tmp/
+
+# cmake stuff beyond CMakeLists.txt
+CMakeLists.txt.user
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Testing
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps
+cmake-build-debug
+
+# make files
+Makefile
+
+# compiled bin file
+MP
+
+www
