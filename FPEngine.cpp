@@ -49,12 +49,21 @@ void FPEngine::handleKeyEvent(GLint key, GLint action) {
                     _gouraudShaderProgram->setProgramUniform(_gouraudShaderProgramUniformLocations.lightType, _lightType );
                 }
                 break;
+            case GLFW_KEY_SPACE:
+                isBoosting = !isBoosting;
+                break;
 
             default: break; // suppress CLion warning
         }
     }
     if (action == GLFW_RELEASE){
-        _pause = !_pause;
+        switch( key ) {
+            case GLFW_KEY_SPACE:
+                isBoosting = !isBoosting;
+                break;
+            default:
+                break; // suppress CLion warning
+        }
     }
 }
 
@@ -513,9 +522,20 @@ void FPEngine::_updateScene() {
     _arcballCam->recomputeOrientation();
     _lightPos = _arcballCam->getPosition();
     iterator++;
-    if(iterator % 5 == 0) {
-        if (frame < 99 && iterator > 0) {
-            frame = frame + 1;
+    if (!isBoosting) {
+        _cameraSpeed = glm::vec2(.10, .06);
+        if (iterator % 5 == 0) {
+            if (frame < 99 && iterator > 0) {
+                frame++;
+            }
+        }
+    }
+    else {
+        _cameraSpeed = glm::vec2(.10, .06);
+        if (iterator % 2 == 0) {
+            if (frame > 42) {
+                frame--;
+            }
         }
     }
 
@@ -626,6 +646,7 @@ void FPEngine::_updateScene() {
             }
         }
     }
+
 }
 
 void FPEngine::run() {

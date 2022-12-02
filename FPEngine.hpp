@@ -252,6 +252,7 @@ private:
     GLfloat _angleZ = 0;
     int frame = 0;
     int iterator = -100;
+    bool isBoosting = false;
 };
 
 void A4_keyboard_callback(GLFWwindow *window, int key, int scancode, int action, int mods );
