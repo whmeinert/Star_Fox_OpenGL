@@ -433,7 +433,7 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) {
 
     modelMtx = glm::rotate( modelMtx, glm::radians(180.0f), CSCI441::Y_AXIS );
     modelMtx = glm::rotate( modelMtx, glm::radians(90.0f), CSCI441::X_AXIS );
-    modelMtx = glm::scale(modelMtx, glm::vec3(1.5f));
+    modelMtx = glm::scale(modelMtx, glm::vec3(3.0f));
     mvpMatrix = projMtx * viewMtx * modelMtx;
 
 
@@ -654,12 +654,14 @@ void FPEngine::run() {
     //	until the user decides to close the window and quit the program.  Without a loop, the
     //	window will display once and then the program exits.
     while( !glfwWindowShouldClose(_window) ) {	        // check if the window was instructed to be closed
-        glDrawBuffer( GL_BACK );				        // work with our back frame buffer
-        glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );	// clear the current color contents and depth buffer in the window
         glEnable( GL_DEPTH_TEST);
         glEnable( GL_BLEND );
         glBlendFunc( GL_SRC_ALPHA,
                      GL_ONE_MINUS_SRC_ALPHA );
+        glDrawBuffer( GL_BACK );				        // work with our back frame buffer
+        glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );	// clear the current color contents and depth buffer in the window
+
+
         // Get the size of our framebuffer.  Ideally this should be the same dimensions as our window, but
         // when using a Retina display the actual window can be larger than the requested window.  Therefore,
         // query what the actual size of the window we are rendering to is.
