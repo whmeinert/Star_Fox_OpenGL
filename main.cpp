@@ -1,13 +1,13 @@
 /*
  *  CSCI 441, Computer Graphics, Fall 2022
  *
- *  Project: lab08
+ *  Project: Final Project
  *  File: main.cpp
  *
  *  Description:
- *      This file contains the basic setup to evaluate Bézier curves.
+ *      This file contains an emulation of a rail movement game like Star Fox 64.
  *
- *  Author: Dr. Paone, Colorado School of Mines, 2022
+ *  Authors: Will Meinert, Emily Hepperlen, Mark Holladay, Colorado School of Mines, 2022
  *
  */
 

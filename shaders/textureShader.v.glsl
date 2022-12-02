@@ -5,11 +5,9 @@ uniform mat4 mvpMatrix;
 
 // attribute inputs
 in vec3 vPos;
-// TODO #A
 in vec2 vTexCoord;
 
 // varying outputs
-// TODO #B
 out vec2 texCoord;
 
 void main() {

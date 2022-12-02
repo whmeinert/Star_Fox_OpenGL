@@ -240,7 +240,7 @@ private:
         GLint color;
     } _flatShaderProgramUniformLocations;
 
-    CSCI441::ModelLoader* _hero;
+    std::vector<CSCI441::ModelLoader*> _hero;
 
     /// \desc pair of values to store the speed the camera can move/rotate.
     /// \brief x = forward/backward delta, y = rotational delta
@@ -250,6 +250,8 @@ private:
     GLfloat _angleX = 0;
     GLfloat _angleY = 0;
     GLfloat _angleZ = 0;
+    int frame = 0;
+    int iterator = -100;
 };
 
 void A4_keyboard_callback(GLFWwindow *window, int key, int scancode, int action, int mods );

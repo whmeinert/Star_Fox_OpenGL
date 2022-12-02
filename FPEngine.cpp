@@ -171,17 +171,14 @@ void FPEngine::_setupShaders() {
     _textureShaderProgram = new CSCI441::ShaderProgram("shaders/textureShader.v.glsl", "shaders/textureShader.f.glsl" );
     // query uniform locations
     _textureShaderUniformLocations.mvpMatrix       = _textureShaderProgram->getUniformLocation("mvpMatrix");
-    // TODO #12A
     _textureShaderUniformLocations.textureMap      = _textureShaderProgram->getUniformLocation("textureMap");
 
     // query attribute locations
     _textureShaderAttributeLocations.vPos          = _textureShaderProgram->getAttributeLocation("vPos");
     _textureShaderAttributeLocations.vNormal       = _textureShaderProgram->getAttributeLocation("vNormal");
-    // TODO #12B
     _textureShaderAttributeLocations.vTexCoord     = _textureShaderProgram->getAttributeLocation("vTexCoord");
 
     // set static uniforms
-    // TODO #13
     _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.textureMap,0);
 
     // hook up the CSCI441 object library to our shader program - MUST be done after the shader is used and before the objects are drawn
@@ -209,11 +206,15 @@ void FPEngine::_setupBuffers() {
     _createQuad(_vaos[VAO_ID::PLATFORM], _vbos[VAO_ID::PLATFORM], _ibos[VAO_ID::PLATFORM], _numVAOPoints[VAO_ID::PLATFORM]);
     _createPlatform(_vaos[VAO_ID::SKYBOX], _vbos[VAO_ID::SKYBOX], _ibos[VAO_ID::SKYBOX], _numVAOPoints[VAO_ID::SKYBOX]);
 
-    _hero = new CSCI441::ModelLoader();
-    _hero->loadModelFile( "assets/models/arwing/arwing.obj");
-    _hero->setAttributeLocations( _textureShaderAttributeLocations.vPos,
-                                   _textureShaderAttributeLocations.vNormal,
-                                   _textureShaderAttributeLocations.vTexCoord);
+    for (int i = 0; i < 100; i++) {
+        _hero.push_back(new CSCI441::ModelLoader());
+        std::string name = "assets/models/Animated/arwingNew" + std::to_string(i) + ".obj";
+        char* fileName = &name[0];
+        _hero.at(i)->loadModelFile(fileName);
+        _hero.at(i)->setAttributeLocations(_textureShaderAttributeLocations.vPos,
+                                     _textureShaderAttributeLocations.vNormal,
+                                     _textureShaderAttributeLocations.vTexCoord);
+    }
 }
 
 void FPEngine::_createPlatform(GLuint vao, GLuint vbo, GLuint ibo, GLsizei &numVAOPoints) const {
@@ -373,7 +374,9 @@ void FPEngine::_cleanupBuffers() {
     glDeleteBuffers( NUM_VAOS, _ibos );
 
     fprintf( stdout, "[INFO]: ...deleting models..\n" );
-    delete _hero;
+    for (int i = 0; i < 100; i++) {
+        delete _hero.at(i);
+    }
 }
 
 void FPEngine::_cleanupTextures() {
@@ -419,16 +422,18 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) {
     // rotate the plane with our camera phi direction
     modelMtx = glm::rotate(modelMtx, _fpCam->getPhi(), -glm::cross(_fpCam->getPosition()-_fpCam->getLookAtPoint(), _fpCam->getUpVector()));
 
-
-
     modelMtx = glm::rotate( modelMtx, glm::radians(180.0f), CSCI441::Y_AXIS );
     modelMtx = glm::rotate( modelMtx, glm::radians(90.0f), CSCI441::X_AXIS );
+    modelMtx = glm::scale(modelMtx, glm::vec3(1.5f));
     mvpMatrix = projMtx * viewMtx * modelMtx;
 
 
     _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.mvpMatrix, mvpMatrix);
     // draw our plane now
-    _hero->draw(_textureShaderProgram->getShaderProgramHandle());
+
+
+    _hero.at(frame)->draw(_textureShaderProgram->getShaderProgramHandle());
+
     //printf("%f, %f, %f | %f, %f, %f\n", viewMtx[0].x, viewMtx[0].y, viewMtx[0].z, modelMtx[2].x, modelMtx[2].y, modelMtx[2].z);
 
 
@@ -506,6 +511,13 @@ void FPEngine::_updateScene() {
     _fpCam->moveForward(0);
     _arcballCam->setLookAtPoint(_arcballCam->getLookAtPoint() - glm::vec3(0, 0, 2*_cameraSpeed.x));
     _arcballCam->recomputeOrientation();
+    _lightPos = _arcballCam->getPosition();
+    iterator++;
+    if(iterator % 5 == 0) {
+        if (frame < 99 && iterator > 0) {
+            frame = frame + 1;
+        }
+    }
 
     position = _fpCam->getPosition();
     // turn right
@@ -623,7 +635,10 @@ void FPEngine::run() {
     while( !glfwWindowShouldClose(_window) ) {	        // check if the window was instructed to be closed
         glDrawBuffer( GL_BACK );				        // work with our back frame buffer
         glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );	// clear the current color contents and depth buffer in the window
-
+        glEnable( GL_DEPTH_TEST);
+        glEnable( GL_BLEND );
+        glBlendFunc( GL_SRC_ALPHA,
+                     GL_ONE_MINUS_SRC_ALPHA );
         // Get the size of our framebuffer.  Ideally this should be the same dimensions as our window, but
         // when using a Retina display the actual window can be larger than the requested window.  Therefore,
         // query what the actual size of the window we are rendering to is.

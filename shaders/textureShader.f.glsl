@@ -5,7 +5,6 @@
 uniform sampler2D textureMap;
 
 // varying inputs
-// TODO #D
 in vec2 texCoord;
 
 // fragment outputs
