@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.14)
 project(FP)
 set(CMAKE_CXX_STANDARD 17)
 set(SOURCE_FILES main.cpp FPEngine.cpp FPEngine.hpp)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
 # Windows with MinGW Installations
@@ -22,8 +23,8 @@ elseif( APPLE AND ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" )
 # Blanket *nix Installations
 elseif( UNIX AND ${CMAKE_SYSTEM_NAME} MATCHES "Linux" )
     # update the include directory location
-    include_directories("/usr/local/include")
+    include_directories("/usr/include" "/usr/include/stb" "/home/emily/School/Computer Graphics/Labs/include" "/usr/local/include")
     # update the lib directory location
-    target_link_directories(${PROJECT_NAME} PUBLIC "/usr/local/lib")
-    target_link_libraries(${PROJECT_NAME} opengl glfw GLEW)
+    target_link_directories(${PROJECT_NAME} PUBLIC "/usr/local/lib" "/home/emily/School/Computer Graphics/Labs/lib")
+    target_link_libraries(${PROJECT_NAME} GL glfw GLEW md5model stbimage)
 endif()
