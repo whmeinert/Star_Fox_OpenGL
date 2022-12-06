@@ -6,6 +6,7 @@
 #include <cstdio>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/matrix.hpp>
+#include <cstdlib>
 
 //*************************************************************************************
 //
@@ -428,8 +429,8 @@ void FPEngine::_setupScene() {
         _lasers[i].laserPos = laserPos;
         _lasers[i].laserDir = glm::normalize(laserDir);
         _lasers[i].laserColor = laserColor;
-        _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.laserPos[i], laserPos);
-        _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.laserColor[i], laserColor);
+        _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.laserPos[i], _lasers[i].laserPos);
+        _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.laserColor[i], _lasers[i].laserColor);
     }
 
 }
@@ -604,7 +605,7 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) {
     _flatShaderProgram->useProgram();
     CSCI441::setVertexAttributeLocations(_flatShaderProgramAttributeLocations.vPos);
     for(int i = 0; i < _maxLasers; i++) {
-        _flatShaderProgram->setProgramUniform(_flatShaderProgramUniformLocations.color, _lasers[i].laserColor);
+        _flatShaderProgram->setProgramUniform(_flatShaderProgramUniformLocations.color, glm::vec3(_lasers[i].laserColor));
         modelMatrix = glm::mat4(1.0f);
         modelMatrix = glm::translate(modelMatrix, _lasers[i].laserPos);
         mvpMatrix = projMtx * viewMtx * modelMatrix;
@@ -753,7 +754,6 @@ void FPEngine::_updateScene() {
         _lasers[i].laserPos += _laserSpeed * _lasers[i].laserDir;
         //TODO: add color if it changes
     }
-    printf("Laser one: (%f, %f, %f)\n", _lasers[0].laserPos.x, _lasers[0].laserPos.y, _lasers[0].laserPos.z);
 
 }
 
