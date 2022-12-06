@@ -2,6 +2,9 @@
 
 #include <CSCI441/TextureUtils.hpp>
 #include <CSCI441/objects.hpp>
+#include <GLFW/glfw3.h>
+#include <cstdio>
+#include <glm/ext/matrix_transform.hpp>
 #include <glm/matrix.hpp>
 
 //*************************************************************************************
@@ -25,6 +28,9 @@ FPEngine::FPEngine()
 
     _mousePosition = glm::vec2(MOUSE_UNINITIALIZED, MOUSE_UNINITIALIZED );
     _leftMouseButtonState = GLFW_RELEASE;
+
+    _nextLaser = 0;
+    _laserSpeed = 200.0f/1.0f/60.0f; // 200units/5s  /  60 fps = ? units/frame
 }
 
 void FPEngine::handleKeyEvent(GLint key, GLint action) {
@@ -52,6 +58,15 @@ void FPEngine::handleKeyEvent(GLint key, GLint action) {
                 break;
             case GLFW_KEY_SPACE:
                 isBoosting = !isBoosting;
+                break;
+            case GLFW_KEY_E:
+                _fpCam->recomputeOrientation();
+                _lasers[_nextLaser].laserPos = _fpCam->getPosition() + glm::vec3(0.0f, -15.0f, 0.0f);
+                _lasers[_nextLaser].laserDir = glm::normalize(_fpCam->getLookAtPoint() - _fpCam->getPosition());
+                _nextLaser++;
+                if(_nextLaser == _maxLasers) {
+                    _nextLaser = 0;
+                }
                 break;
 
             default: break; // suppress CLion warning
@@ -175,6 +190,7 @@ void FPEngine::_setupShaders() {
     // get uniform locations
     _flatShaderProgramUniformLocations.mvpMatrix             = _flatShaderProgram->getUniformLocation("mvpMatrix");
     _flatShaderProgramUniformLocations.color                 = _flatShaderProgram->getUniformLocation("color");
+    _flatShaderProgramAttributeLocations.vPos          = _flatShaderProgram->getAttributeLocation("vPos");
     // NOTE: we do not query an attribute locations because in our shader we have set the locations to be the same as
     // the Gouraud Shader attribute locations
 
@@ -190,8 +206,38 @@ void FPEngine::_setupShaders() {
     _textureShaderUniformLocations.cameraPos      = _textureShaderProgram->getUniformLocation("cameraPos");
     _textureShaderUniformLocations.inverseVPMatrix      = _textureShaderProgram->getUniformLocation("inverseVPMatrix");
     _textureShaderUniformLocations.doShading = _textureShaderProgram->getUniformLocation("doShading");
-    _textureShaderUniformLocations.laserOneColor = _textureShaderProgram->getUniformLocation("laserOneColor");
-    _textureShaderUniformLocations.laserOnePos = _textureShaderProgram->getUniformLocation("laserOnePos");
+    _textureShaderUniformLocations.laserColor[0] = _textureShaderProgram->getUniformLocation("laserOneColor");
+    _textureShaderUniformLocations.laserPos[0] = _textureShaderProgram->getUniformLocation("laserOnePos");
+    _textureShaderUniformLocations.laserColor[1] = _textureShaderProgram->getUniformLocation("laserTwoColor");
+    _textureShaderUniformLocations.laserPos[1] = _textureShaderProgram->getUniformLocation("laserTwoPos");
+    _textureShaderUniformLocations.laserColor[2] = _textureShaderProgram->getUniformLocation("laserThreeColor");
+    _textureShaderUniformLocations.laserPos[2] = _textureShaderProgram->getUniformLocation("laserThreePos");
+    _textureShaderUniformLocations.laserColor[3] = _textureShaderProgram->getUniformLocation("laserFourColor");
+    _textureShaderUniformLocations.laserPos[3] = _textureShaderProgram->getUniformLocation("laserFourPos");
+    _textureShaderUniformLocations.laserColor[4] = _textureShaderProgram->getUniformLocation("laserFiveColor");
+    _textureShaderUniformLocations.laserPos[4] = _textureShaderProgram->getUniformLocation("laserFivePos");
+    _textureShaderUniformLocations.laserColor[5] = _textureShaderProgram->getUniformLocation("laserSixColor");
+    _textureShaderUniformLocations.laserPos[5] = _textureShaderProgram->getUniformLocation("laserSixPos");
+    _textureShaderUniformLocations.laserColor[6] = _textureShaderProgram->getUniformLocation("laserSevenColor");
+    _textureShaderUniformLocations.laserPos[6] = _textureShaderProgram->getUniformLocation("laserSevenPos");
+    _textureShaderUniformLocations.laserColor[7] = _textureShaderProgram->getUniformLocation("laserEightColor");
+    _textureShaderUniformLocations.laserPos[7] = _textureShaderProgram->getUniformLocation("laserEightPos");
+    _textureShaderUniformLocations.laserColor[8] = _textureShaderProgram->getUniformLocation("laserNineColor");
+    _textureShaderUniformLocations.laserPos[8] = _textureShaderProgram->getUniformLocation("laserNinePos");
+    _textureShaderUniformLocations.laserColor[9] = _textureShaderProgram->getUniformLocation("laserTenColor");
+    _textureShaderUniformLocations.laserPos[9] = _textureShaderProgram->getUniformLocation("laserTenPos");
+    _textureShaderUniformLocations.laserColor[10] = _textureShaderProgram->getUniformLocation("laserElevenColor");
+    _textureShaderUniformLocations.laserPos[10] = _textureShaderProgram->getUniformLocation("laserElevenPos");
+    _textureShaderUniformLocations.laserColor[11] = _textureShaderProgram->getUniformLocation("laserTwelveColor");
+    _textureShaderUniformLocations.laserPos[11] = _textureShaderProgram->getUniformLocation("laserTwelvePos");
+    _textureShaderUniformLocations.laserColor[12] = _textureShaderProgram->getUniformLocation("laserThirteenColor");
+    _textureShaderUniformLocations.laserPos[12] = _textureShaderProgram->getUniformLocation("laserThirteenPos");
+    _textureShaderUniformLocations.laserColor[13] = _textureShaderProgram->getUniformLocation("laserFourteenColor");
+    _textureShaderUniformLocations.laserPos[13] = _textureShaderProgram->getUniformLocation("laserFourteenPos");
+    _textureShaderUniformLocations.laserColor[14] = _textureShaderProgram->getUniformLocation("laserFifteenColor");
+    _textureShaderUniformLocations.laserPos[14] = _textureShaderProgram->getUniformLocation("laserFifteenPos");
+    _textureShaderUniformLocations.laserColor[15] = _textureShaderProgram->getUniformLocation("laserSixteenColor");
+    _textureShaderUniformLocations.laserPos[15] = _textureShaderProgram->getUniformLocation("laserSixteenPos");
 
     // query attribute locations
     _textureShaderAttributeLocations.vPos          = _textureShaderProgram->getAttributeLocation("vPos");
@@ -371,9 +417,20 @@ void FPEngine::_setupScene() {
     _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.sunDir, glm::vec3(1.0f, -2.0f, 0.5f));
     // _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.sunDir, glm::vec3(0.0f, 0.0f, -1.0f));
     _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.sunColor, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.laserOneColor, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
-    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.laserOnePos, glm::vec3(0.0f, 5.0f, -100.0f));
+    // _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.laserOneColor, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
+    // _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.laserOnePos, glm::vec3(0.0f, 5.0f, -100.0f));
 
+    glm::vec3 laserPos = glm::vec3(10000.0f);
+    glm::vec3 laserDir = glm::vec3(1.0f);
+    glm::vec4 laserColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+
+    for(int i = 0; i < _maxLasers; i++) {
+        _lasers[i].laserPos = laserPos;
+        _lasers[i].laserDir = glm::normalize(laserDir);
+        _lasers[i].laserColor = laserColor;
+        _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.laserPos[i], laserPos);
+        _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.laserColor[i], laserColor);
+    }
 
 }
 
@@ -440,6 +497,10 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) {
     _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.doShading, 1.0f);
     _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.cameraPos, _fpCam->getPosition());
     _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.inverseVPMatrix, glm::inverse(projMtx * viewMtx));
+
+    for(int i = 0; i < _maxLasers; i++) {
+        _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.laserPos[i], _lasers[i].laserPos);
+    }
 
     /// BEGIN DRAWING THE HERO ///
     glm::mat4 modelMtx(1.0f);
@@ -537,6 +598,22 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) {
     _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.doShading, 0.0f);
 
     //// END DRAWING THE SKY BOX ////
+    ////
+
+    // Draw lasers
+    _flatShaderProgram->useProgram();
+    CSCI441::setVertexAttributeLocations(_flatShaderProgramAttributeLocations.vPos);
+    for(int i = 0; i < _maxLasers; i++) {
+        _flatShaderProgram->setProgramUniform(_flatShaderProgramUniformLocations.color, _lasers[i].laserColor);
+        modelMatrix = glm::mat4(1.0f);
+        modelMatrix = glm::translate(modelMatrix, _lasers[i].laserPos);
+        mvpMatrix = projMtx * viewMtx * modelMatrix;
+        _flatShaderProgram->setProgramUniform(_flatShaderProgramUniformLocations.mvpMatrix, mvpMatrix);
+        CSCI441::drawSolidSphere(1.0f, 16, 16);
+    }
+    CSCI441::setVertexAttributeLocations(_textureShaderAttributeLocations.vPos,
+                                         _textureShaderAttributeLocations.vNormal,
+                                         _textureShaderAttributeLocations.vTexCoord);
 }
 
 void FPEngine::_updateScene() {
@@ -670,6 +747,13 @@ void FPEngine::_updateScene() {
             }
         }
     }
+
+    // Lasers
+    for(int i = 0; i < _maxLasers; i++) {
+        _lasers[i].laserPos += _laserSpeed * _lasers[i].laserDir;
+        //TODO: add color if it changes
+    }
+    printf("Laser one: (%f, %f, %f)\n", _lasers[0].laserPos.x, _lasers[0].laserPos.y, _lasers[0].laserPos.z);
 
 }
 

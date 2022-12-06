@@ -159,8 +159,8 @@ private:
         GLint cameraPos;
         GLint inverseVPMatrix;
         GLint doShading;
-        GLint laserOneColor;
-        GLint laserOnePos;
+        GLint laserColor[16];
+        GLint laserPos[16];
 
 
     } _textureShaderUniformLocations;
@@ -182,6 +182,15 @@ private:
         GLfloat x, y, z;
         GLfloat s, t;
     };
+
+    GLuint _maxLasers = 16;
+    GLuint _nextLaser;
+    GLfloat _laserSpeed;
+        struct Lasers {
+            glm::vec4 laserColor;
+            glm::vec3 laserPos;
+            glm::vec3 laserDir;
+        } _lasers[16];
 
     /// \desc creates the platform object
     /// \param [in] vao VAO descriptor to bind
@@ -247,6 +256,12 @@ private:
         /// \desc the color to apply location
         GLint color;
     } _flatShaderProgramUniformLocations;
+
+    struct FlatShaderProgramAttributeLocations {
+        /// \desc precomputed MVP matrix location
+        GLint vPos;
+        /// \desc the color to apply location
+    } _flatShaderProgramAttributeLocations;
 
     std::vector<CSCI441::ModelLoader*> _hero;
 
