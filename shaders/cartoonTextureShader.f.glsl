@@ -7,6 +7,8 @@ uniform vec3 sunDir;
 uniform vec4 sunColor;
 uniform vec3 cameraPos;
 uniform float doShading;
+uniform vec3 laserOnePos;
+uniform vec4 laserOneColor;
 
 // varying inputs
 in vec2 texCoord;
@@ -27,6 +29,8 @@ void main() {
   float b = texel.z;
   float a = texel.w;
   if(doShading > 0.5) {
+      vec4 totalI = vec4(0.0);
+
       vec3 sunNormal = normalize(fNormal);
       vec3 sunl = -normalize(sunDir);
       vec4 sunId = texel * sunColor * max(dot(sunl, sunNormal), 0);
@@ -37,11 +41,26 @@ void main() {
       vec4 sunIa = texel * vec4(sunColor.xyz * sunAmbientScale, 1.0);
       // vec4 sunI = sunId + sunIs + sunIa;
       vec4 sunI = sunId + sunIs + sunIa;
+      totalI += sunI;
 
-      r = sunI.x;
-      g = sunI.y;
-      b = sunI.z;
-      a = sunI.w;
+      vec3 laserAttenuation = vec3(1.0, 0.25, 0.0);
+
+      vec3 laserOneNormal = normalize(fNormal);
+      vec3 laserOnel = -normalize(laserOnePos - vec3(fPos));
+      vec4 laserOneId = texel * laserOneColor * max(dot(laserOnel, laserOneNormal), 0);
+      vec3 laserOner = -laserOnel + 2 * dot(laserOneNormal, laserOnel) * laserOneNormal;
+      float laserOneAlpha = 2.0;
+      vec4 laserOneIs = texel * laserOneColor * pow(max(dot(normalize(cameraPos - vec3(fPos)), laserOner), 0), laserOneAlpha);
+      float laserOneAmbientScale = 0.2;
+      vec4 laserOneIa = texel * vec4(laserOneColor.xyz * laserOneAmbientScale, 1.0);
+      // vec4 sunI = sunId + sunIs + sunIa;
+      vec4 laserOneI = laserOneId + laserOneIs + laserOneIa;
+      totalI += laserOneI * 1/(laserAttenuation.x + laserAttenuation.y * length(laserOnePos - vec3(fPos)) + laserAttenuation.z * pow(length(laserOnePos - vec3(fPos)),2));
+
+      r = totalI.x;
+      g = totalI.y;
+      b = totalI.z;
+      a = totalI.w;
   }
 
   // Attempt cartoon shader

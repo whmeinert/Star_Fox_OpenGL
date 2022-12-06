@@ -159,6 +159,8 @@ private:
         GLint cameraPos;
         GLint inverseVPMatrix;
         GLint doShading;
+        GLint laserOneColor;
+        GLint laserOnePos;
 
 
     } _textureShaderUniformLocations;

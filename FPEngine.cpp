@@ -190,6 +190,8 @@ void FPEngine::_setupShaders() {
     _textureShaderUniformLocations.cameraPos      = _textureShaderProgram->getUniformLocation("cameraPos");
     _textureShaderUniformLocations.inverseVPMatrix      = _textureShaderProgram->getUniformLocation("inverseVPMatrix");
     _textureShaderUniformLocations.doShading = _textureShaderProgram->getUniformLocation("doShading");
+    _textureShaderUniformLocations.laserOneColor = _textureShaderProgram->getUniformLocation("laserOneColor");
+    _textureShaderUniformLocations.laserOnePos = _textureShaderProgram->getUniformLocation("laserOnePos");
 
     // query attribute locations
     _textureShaderAttributeLocations.vPos          = _textureShaderProgram->getAttributeLocation("vPos");
@@ -369,6 +371,8 @@ void FPEngine::_setupScene() {
     _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.sunDir, glm::vec3(1.0f, -2.0f, 0.5f));
     // _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.sunDir, glm::vec3(0.0f, 0.0f, -1.0f));
     _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.sunColor, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.laserOneColor, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
+    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.laserOnePos, glm::vec3(0.0f, 5.0f, -100.0f));
 
 
 }
@@ -517,20 +521,20 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) {
     modelMatrix = glm::scale(modelMatrix, glm::vec3(20.0f));
     mvpMtx = projMtx * viewMtx * modelMatrix;
     _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.mvpMatrix, mvpMtx);
-    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.doShading, 1.0f);
     glBindTexture(GL_TEXTURE_2D, _texHandles[TEXTURE_ID::BOTTOM]);
     glBindVertexArray( _vaos[VAO_ID::SKYBOX] );
     glDrawElements(GL_TRIANGLE_STRIP, _numVAOPoints[VAO_ID::SKYBOX], GL_UNSIGNED_SHORT, (void*)0 );
-    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.doShading, 0.0f);
 
     // Top
     modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -20.0f, 0.0f));
     modelMatrix = glm::scale(modelMatrix, glm::vec3(20.0f));
     mvpMtx = projMtx * viewMtx * modelMatrix;
     _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.mvpMatrix, mvpMtx);
+    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.doShading, 1.0f);
     glBindTexture(GL_TEXTURE_2D, _texHandles[TEXTURE_ID::BACK]);
     glBindVertexArray( _vaos[VAO_ID::PLATFORM] );
     glDrawElements(GL_TRIANGLE_STRIP, _numVAOPoints[VAO_ID::PLATFORM], GL_UNSIGNED_SHORT, (void*)0 );
+    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.doShading, 0.0f);
 
     //// END DRAWING THE SKY BOX ////
 }
