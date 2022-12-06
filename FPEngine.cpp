@@ -332,10 +332,10 @@ void FPEngine::_createQuad(GLuint vao, GLuint vbo, GLuint ibo, GLsizei &numVAOPo
 
     // create our custom quad
     VertexNormalTextured quadVertices[4] = {
-            { -10.0f, 0.0f, -10.0f,  0.0f, 1.0f, 0.0f, 0, 0 }, // 0 - BL
-            {  10.0f, 0.0f, -10.0f,  0.0f, 1.0f, 0.0f, 5, 0 }, // 1 - BR
-            { -10.0f, 0.0f,  10.0f,  0.0f, 1.0f, 0.0f, 0, 5 }, // 2 - TL
-            {  10.0f, 0.0f,  10.0f,  0.0f, 1.0f, 0.0f, 5, 5 }  // 3 - TR
+            { -100.0f, 0.0f, -100.0f,  0.0f, 1.0f, 0.0f, 0, 0 }, // 0 - BL
+            {  100.0f, 0.0f, -100.0f,  0.0f, 1.0f, 0.0f, 25, 0 }, // 1 - BR
+            { -100.0f, 0.0f,  100.0f,  0.0f, 1.0f, 0.0f, 0, 25 }, // 2 - TL
+            {  100.0f, 0.0f,  100.0f,  0.0f, 1.0f, 0.0f, 25, 25 }  // 3 - TR
     };
 
     GLushort quadIndices[4] = { 0, 1, 2, 3 };
@@ -516,7 +516,7 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) {
 
     modelMtx = glm::rotate( modelMtx, glm::radians(180.0f), CSCI441::Y_AXIS );
     modelMtx = glm::rotate( modelMtx, glm::radians(90.0f), CSCI441::X_AXIS );
-    modelMtx = glm::scale(modelMtx, glm::vec3(3.0f));
+    modelMtx = glm::scale(modelMtx, glm::vec3(1.5f));
     mvpMatrix = projMtx * viewMtx * modelMtx;
 
 
@@ -529,77 +529,6 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) {
     //printf("%f, %f, %f | %f, %f, %f\n", viewMtx[0].x, viewMtx[0].y, viewMtx[0].z, modelMtx[2].x, modelMtx[2].y, modelMtx[2].z);
 
     _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.doShading, 0.0f);
-
-    /// BEGIN DRAWING SKYBOX ///
-    CSCI441::setVertexAttributeLocations(_textureShaderAttributeLocations.vPos,
-                                         _textureShaderAttributeLocations.vNormal,
-                                         _textureShaderAttributeLocations.vTexCoord);
-
-    modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 200.0f, 0.0f));
-    modelMatrix = glm::scale(modelMatrix, glm::vec3(20.0f));
-    glm::mat4 mvpMtx = projMtx * viewMtx * modelMatrix;
-    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.mvpMatrix, mvpMtx);
-    glBindTexture(GL_TEXTURE_2D, _texHandles[TEXTURE_ID::TOP]);
-    glBindVertexArray( _vaos[VAO_ID::SKYBOX] );
-    glDrawElements(GL_TRIANGLE_STRIP, _numVAOPoints[VAO_ID::SKYBOX], GL_UNSIGNED_SHORT, (void*)0 );
-
-    // Right
-    modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(200.0f, 0.0f, 0.0f));
-    modelMatrix = glm::rotate(modelMatrix, glm::radians(-90.0f), CSCI441::Y_AXIS);
-    modelMatrix = glm::rotate(modelMatrix, glm::radians(-90.0f), CSCI441::X_AXIS);
-    modelMatrix = glm::scale(modelMatrix, glm::vec3(20.0f));
-    mvpMtx = projMtx * viewMtx * modelMatrix;
-    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.mvpMatrix, mvpMtx);
-    glBindTexture(GL_TEXTURE_2D, _texHandles[TEXTURE_ID::RIGHT]);
-    glBindVertexArray( _vaos[VAO_ID::SKYBOX] );
-    glDrawElements(GL_TRIANGLE_STRIP, _numVAOPoints[VAO_ID::SKYBOX], GL_UNSIGNED_SHORT, (void*)0 );
-
-    // Back
-    modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 200.0f));
-    modelMatrix = glm::rotate(modelMatrix, glm::radians(-90.0f), CSCI441::X_AXIS);
-    modelMatrix = glm::rotate(modelMatrix, glm::radians(-180.0f), CSCI441::Z_AXIS);
-    modelMatrix = glm::scale(modelMatrix, glm::vec3(20.0f));
-    mvpMtx = projMtx * viewMtx * modelMatrix;
-    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.mvpMatrix, mvpMtx);
-    glBindTexture(GL_TEXTURE_2D, _texHandles[TEXTURE_ID::LEFT]);
-    glBindVertexArray( _vaos[VAO_ID::SKYBOX] );
-    glDrawElements(GL_TRIANGLE_STRIP, _numVAOPoints[VAO_ID::SKYBOX], GL_UNSIGNED_SHORT, (void*)0 );
-
-    // Front
-    modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -200.0f));
-    modelMatrix = glm::rotate(modelMatrix, glm::radians(-90.0f), CSCI441::X_AXIS);
-    //modelMatrix = glm::rotate(modelMatrix, glm::radians(-180.0f), CSCI441::Z_AXIS);
-    modelMatrix = glm::scale(modelMatrix, glm::vec3(20.0f));
-    mvpMtx = projMtx * viewMtx * modelMatrix;
-    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.mvpMatrix, mvpMtx);
-    glBindTexture(GL_TEXTURE_2D, _texHandles[TEXTURE_ID::FRONT]);
-    glBindVertexArray( _vaos[VAO_ID::SKYBOX] );
-    glDrawElements(GL_TRIANGLE_STRIP, _numVAOPoints[VAO_ID::SKYBOX], GL_UNSIGNED_SHORT, (void*)0 );
-
-    // Front
-    modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-200.0f, 0.0f, 0.0f));
-    modelMatrix = glm::rotate(modelMatrix, glm::radians(90.0f), CSCI441::Y_AXIS);
-    modelMatrix = glm::rotate(modelMatrix, glm::radians(-90.0f), CSCI441::X_AXIS);
-    modelMatrix = glm::scale(modelMatrix, glm::vec3(20.0f));
-    mvpMtx = projMtx * viewMtx * modelMatrix;
-    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.mvpMatrix, mvpMtx);
-    glBindTexture(GL_TEXTURE_2D, _texHandles[TEXTURE_ID::BOTTOM]);
-    glBindVertexArray( _vaos[VAO_ID::SKYBOX] );
-    glDrawElements(GL_TRIANGLE_STRIP, _numVAOPoints[VAO_ID::SKYBOX], GL_UNSIGNED_SHORT, (void*)0 );
-
-    // Top
-    modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -20.0f, 0.0f));
-    modelMatrix = glm::scale(modelMatrix, glm::vec3(20.0f));
-    mvpMtx = projMtx * viewMtx * modelMatrix;
-    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.mvpMatrix, mvpMtx);
-    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.doShading, 1.0f);
-    glBindTexture(GL_TEXTURE_2D, _texHandles[TEXTURE_ID::BACK]);
-    glBindVertexArray( _vaos[VAO_ID::PLATFORM] );
-    glDrawElements(GL_TRIANGLE_STRIP, _numVAOPoints[VAO_ID::PLATFORM], GL_UNSIGNED_SHORT, (void*)0 );
-    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.doShading, 0.0f);
-
-    //// END DRAWING THE SKY BOX ////
-    ////
 
     // Draw lasers
     _flatShaderProgram->useProgram();
@@ -617,6 +546,97 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) {
                                          _textureShaderAttributeLocations.vTexCoord);
 }
 
+void FPEngine::_renderSkybox(glm::mat4 viewMtx, glm::mat4 projMtx) {
+    glm::mat4 modelMatrix = glm::mat4( 1.0f );
+    glm::mat4 projectionViewMatrix = projMtx * viewMtx;
+    glm::mat4 mvpMatrix = projectionViewMatrix * modelMatrix;
+
+    // use the gouraud shader
+    _textureShaderProgram->useProgram();
+    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.doShading, 1.0f);
+    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.cameraPos, _fpCam->getPosition());
+    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.inverseVPMatrix, glm::inverse(projMtx * viewMtx));
+
+    for(int i = 0; i < _maxLasers; i++) {
+        _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.laserPos[i], _lasers[i].laserPos);
+    }
+
+    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.doShading, 0.0f);
+
+    /// BEGIN DRAWING SKYBOX ///
+    CSCI441::setVertexAttributeLocations(_textureShaderAttributeLocations.vPos,
+                                         _textureShaderAttributeLocations.vNormal,
+                                         _textureShaderAttributeLocations.vTexCoord);
+
+    modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 200.0f, 0.0f));
+    modelMatrix = glm::translate(modelMatrix, _arcballCam->getLookAtPoint());
+    modelMatrix = glm::scale(modelMatrix, glm::vec3(20.0f));
+    glm::mat4 mvpMtx = projMtx * viewMtx * modelMatrix;
+    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.mvpMatrix, mvpMtx);
+    glBindTexture(GL_TEXTURE_2D, _texHandles[TEXTURE_ID::TOP]);
+    glBindVertexArray( _vaos[VAO_ID::SKYBOX] );
+    glDrawElements(GL_TRIANGLE_STRIP, _numVAOPoints[VAO_ID::SKYBOX], GL_UNSIGNED_SHORT, (void*)0 );
+
+    // Right
+    modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(200.0f, 0.0f, 0.0f));
+    modelMatrix = glm::translate(modelMatrix, _arcballCam->getLookAtPoint());
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(-90.0f), CSCI441::Y_AXIS);
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(-90.0f), CSCI441::X_AXIS);
+    modelMatrix = glm::scale(modelMatrix, glm::vec3(20.0f));
+    mvpMtx = projMtx * viewMtx * modelMatrix;
+    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.mvpMatrix, mvpMtx);
+    glBindTexture(GL_TEXTURE_2D, _texHandles[TEXTURE_ID::RIGHT]);
+    glBindVertexArray( _vaos[VAO_ID::SKYBOX] );
+    glDrawElements(GL_TRIANGLE_STRIP, _numVAOPoints[VAO_ID::SKYBOX], GL_UNSIGNED_SHORT, (void*)0 );
+
+    // Back
+    modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 200.0f));
+    modelMatrix = glm::translate(modelMatrix, _arcballCam->getLookAtPoint());
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(-90.0f), CSCI441::X_AXIS);
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(-180.0f), CSCI441::Z_AXIS);
+    modelMatrix = glm::scale(modelMatrix, glm::vec3(20.0f));
+    mvpMtx = projMtx * viewMtx * modelMatrix;
+    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.mvpMatrix, mvpMtx);
+    glBindTexture(GL_TEXTURE_2D, _texHandles[TEXTURE_ID::LEFT]);
+    glBindVertexArray( _vaos[VAO_ID::SKYBOX] );
+    glDrawElements(GL_TRIANGLE_STRIP, _numVAOPoints[VAO_ID::SKYBOX], GL_UNSIGNED_SHORT, (void*)0 );
+
+    // Front
+    modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -200.0f));
+    modelMatrix = glm::translate(modelMatrix, _arcballCam->getLookAtPoint());
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(-90.0f), CSCI441::X_AXIS);
+    //modelMatrix = glm::rotate(modelMatrix, glm::radians(-180.0f), CSCI441::Z_AXIS);
+    modelMatrix = glm::scale(modelMatrix, glm::vec3(20.0f));
+    mvpMtx = projMtx * viewMtx * modelMatrix;
+    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.mvpMatrix, mvpMtx);
+    glBindTexture(GL_TEXTURE_2D, _texHandles[TEXTURE_ID::FRONT]);
+    glBindVertexArray( _vaos[VAO_ID::SKYBOX] );
+    glDrawElements(GL_TRIANGLE_STRIP, _numVAOPoints[VAO_ID::SKYBOX], GL_UNSIGNED_SHORT, (void*)0 );
+
+    // Front
+    modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-200.0f, 0.0f, 0.0f));
+    modelMatrix = glm::translate(modelMatrix, _arcballCam->getLookAtPoint());
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(90.0f), CSCI441::Y_AXIS);
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(-90.0f), CSCI441::X_AXIS);
+    modelMatrix = glm::scale(modelMatrix, glm::vec3(20.0f));
+    mvpMtx = projMtx * viewMtx * modelMatrix;
+    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.mvpMatrix, mvpMtx);
+    glBindTexture(GL_TEXTURE_2D, _texHandles[TEXTURE_ID::BOTTOM]);
+    glBindVertexArray( _vaos[VAO_ID::SKYBOX] );
+    glDrawElements(GL_TRIANGLE_STRIP, _numVAOPoints[VAO_ID::SKYBOX], GL_UNSIGNED_SHORT, (void*)0 );
+
+    // Top
+    modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -20.0f, 0.0f));
+    modelMatrix = glm::scale(modelMatrix, glm::vec3(20.0f));
+    mvpMtx = projMtx * viewMtx * modelMatrix;
+    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.mvpMatrix, mvpMtx);
+    glBindTexture(GL_TEXTURE_2D, _texHandles[TEXTURE_ID::BACK]);
+    glBindVertexArray( _vaos[VAO_ID::PLATFORM] );
+    glDrawElements(GL_TRIANGLE_STRIP, _numVAOPoints[VAO_ID::PLATFORM], GL_UNSIGNED_SHORT, (void*)0 );
+
+    //// END DRAWING THE SKY BOX ////
+}
+
 void FPEngine::_updateScene() {
     _fpCam->setPosition(_fpCam->getPosition() - glm::vec3(0, 0, 2*_cameraSpeed.x));
     _fpCam->moveForward(0);
@@ -625,7 +645,7 @@ void FPEngine::_updateScene() {
     _lightPos = _arcballCam->getPosition();
     iterator++;
     if (!isBoosting) {
-        _cameraSpeed = glm::vec2(.10, .06);
+        _cameraSpeed = glm::vec2(.15, .06);
         if (iterator % 5 == 0) {
             if (frame < 99 && iterator > 0) {
                 frame++;
@@ -633,7 +653,7 @@ void FPEngine::_updateScene() {
         }
     }
     else {
-        _cameraSpeed = glm::vec2(.10, .06);
+        _cameraSpeed = glm::vec2(.22, .06);
         if (iterator % 2 == 0) {
             if (frame > 42) {
                 frame--;
@@ -787,6 +807,9 @@ void FPEngine::run() {
         // set up our look at matrix to position our camera
         glm::mat4 viewMatrix = _arcballCam->getViewMatrix();
 
+        glDisable(GL_DEPTH_TEST);
+        _renderSkybox(viewMatrix, projectionMatrix);
+        glEnable(GL_DEPTH_TEST);
         // draw everything to the window
         _renderScene(viewMatrix, projectionMatrix);
 

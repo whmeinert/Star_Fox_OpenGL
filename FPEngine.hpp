@@ -276,6 +276,8 @@ private:
     int frame = 0;
     int iterator = -100;
     bool isBoosting = false;
+
+    void _renderSkybox(glm::mat4 viewMtx, glm::mat4 projMtx);
 };
 
 void A4_keyboard_callback(GLFWwindow *window, int key, int scancode, int action, int mods );
