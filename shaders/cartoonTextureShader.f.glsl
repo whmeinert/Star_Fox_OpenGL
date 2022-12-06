@@ -3,9 +3,16 @@
 // uniform inputs
 // TODO #E
 uniform sampler2D textureMap;
+uniform vec3 sunDir;
+uniform vec4 sunColor;
+uniform vec3 cameraPos;
+uniform float doShading;
 
 // varying inputs
 in vec2 texCoord;
+in vec3 fNormal;
+in vec4 fPos;
+
 
 // fragment outputs
 out vec4 fragColorOut;
@@ -14,12 +21,30 @@ void main() {
   // TODO #F
   vec4 texel = texture(textureMap, texCoord);
 
-  // Attempt cartoon shader
+  // Phong shader
   float r = texel.x;
   float g = texel.y;
   float b = texel.z;
   float a = texel.w;
+  if(doShading > 0.5) {
+      vec3 sunNormal = normalize(fNormal);
+      vec3 sunl = -normalize(sunDir);
+      vec4 sunId = texel * sunColor * max(dot(sunl, sunNormal), 0);
+      vec3 sunr = -sunl + 2 * dot(sunNormal, sunl) * sunNormal;
+      float sunAlpha = 2.0;
+      vec4 sunIs = texel * sunColor * pow(max(dot(normalize(cameraPos - vec3(fPos)), sunr), 0), sunAlpha);
+      float sunAmbientScale = 0.4;
+      vec4 sunIa = texel * vec4(sunColor.xyz * sunAmbientScale, 1.0);
+      // vec4 sunI = sunId + sunIs + sunIa;
+      vec4 sunI = sunId + sunIs + sunIa;
 
+      r = sunI.x;
+      g = sunI.y;
+      b = sunI.z;
+      a = sunI.w;
+  }
+
+  // Attempt cartoon shader
   // convert to hsv
   // Using https://www.geeksforgeeks.org/program-change-rgb-color-model-hsv-color-model/
   float cmax = max(r, max(g, b));

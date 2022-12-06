@@ -2,6 +2,7 @@
 
 #include <CSCI441/TextureUtils.hpp>
 #include <CSCI441/objects.hpp>
+#include <glm/matrix.hpp>
 
 //*************************************************************************************
 //
@@ -178,12 +179,17 @@ void FPEngine::_setupShaders() {
     // the Gouraud Shader attribute locations
 
     // NOTE: cartoon shader is overriding normal texture shader curr
-    _textureShaderProgram = new CSCI441::ShaderProgram("shaders/textureShader.v.glsl", "shaders/cartoonTextureShader.f.glsl" );
+    _textureShaderProgram = new CSCI441::ShaderProgram("shaders/cartoonTextureShader.v.glsl", "shaders/cartoonTextureShader.f.glsl" );
     // _textureShaderProgram = new CSCI441::ShaderProgram("shaders/textureShader.v.glsl", "shaders/textureShader.f.glsl" );
 
     // query uniform locations
     _textureShaderUniformLocations.mvpMatrix       = _textureShaderProgram->getUniformLocation("mvpMatrix");
     _textureShaderUniformLocations.textureMap      = _textureShaderProgram->getUniformLocation("textureMap");
+    _textureShaderUniformLocations.sunDir      = _textureShaderProgram->getUniformLocation("sunDir");
+    _textureShaderUniformLocations.sunColor      = _textureShaderProgram->getUniformLocation("sunColor");
+    _textureShaderUniformLocations.cameraPos      = _textureShaderProgram->getUniformLocation("cameraPos");
+    _textureShaderUniformLocations.inverseVPMatrix      = _textureShaderProgram->getUniformLocation("inverseVPMatrix");
+    _textureShaderUniformLocations.doShading = _textureShaderProgram->getUniformLocation("doShading");
 
     // query attribute locations
     _textureShaderAttributeLocations.vPos          = _textureShaderProgram->getAttributeLocation("vPos");
@@ -192,6 +198,7 @@ void FPEngine::_setupShaders() {
 
     // set static uniforms
     _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.textureMap,0);
+
 
     // hook up the CSCI441 object library to our shader program - MUST be done after the shader is used and before the objects are drawn
     // if we have multiple shaders the flow would be:
@@ -359,6 +366,10 @@ void FPEngine::_setupScene() {
     glm::vec3 flatColor(1.0f, 1.0f, 1.0f);
     _flatShaderProgram->setProgramUniform(_flatShaderProgramUniformLocations.color, flatColor);
 
+    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.sunDir, glm::vec3(1.0f, -2.0f, 0.5f));
+    // _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.sunDir, glm::vec3(0.0f, 0.0f, -1.0f));
+    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.sunColor, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+
 
 }
 
@@ -422,6 +433,9 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) {
 
     // use the gouraud shader
     _textureShaderProgram->useProgram();
+    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.doShading, 1.0f);
+    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.cameraPos, _fpCam->getPosition());
+    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.inverseVPMatrix, glm::inverse(projMtx * viewMtx));
 
     /// BEGIN DRAWING THE HERO ///
     glm::mat4 modelMtx(1.0f);
@@ -448,6 +462,7 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) {
 
     //printf("%f, %f, %f | %f, %f, %f\n", viewMtx[0].x, viewMtx[0].y, viewMtx[0].z, modelMtx[2].x, modelMtx[2].y, modelMtx[2].z);
 
+    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.doShading, 0.0f);
 
     /// BEGIN DRAWING SKYBOX ///
     CSCI441::setVertexAttributeLocations(_textureShaderAttributeLocations.vPos,
@@ -502,9 +517,11 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) {
     modelMatrix = glm::scale(modelMatrix, glm::vec3(20.0f));
     mvpMtx = projMtx * viewMtx * modelMatrix;
     _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.mvpMatrix, mvpMtx);
+    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.doShading, 1.0f);
     glBindTexture(GL_TEXTURE_2D, _texHandles[TEXTURE_ID::BOTTOM]);
     glBindVertexArray( _vaos[VAO_ID::SKYBOX] );
     glDrawElements(GL_TRIANGLE_STRIP, _numVAOPoints[VAO_ID::SKYBOX], GL_UNSIGNED_SHORT, (void*)0 );
+    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.doShading, 0.0f);
 
     // Top
     modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -20.0f, 0.0f));

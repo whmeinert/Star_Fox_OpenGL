@@ -154,6 +154,12 @@ private:
         GLint mvpMatrix;
         /// \desc map of texture
         GLint textureMap;
+        GLint sunDir;
+        GLint sunColor;
+        GLint cameraPos;
+        GLint inverseVPMatrix;
+        GLint doShading;
+
 
     } _textureShaderUniformLocations;
     /// \desc stores the locations of all of our shader attributes
