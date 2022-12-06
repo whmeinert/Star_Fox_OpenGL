@@ -177,7 +177,10 @@ void FPEngine::_setupShaders() {
     // NOTE: we do not query an attribute locations because in our shader we have set the locations to be the same as
     // the Gouraud Shader attribute locations
 
-    _textureShaderProgram = new CSCI441::ShaderProgram("shaders/textureShader.v.glsl", "shaders/textureShader.f.glsl" );
+    // NOTE: cartoon shader is overriding normal texture shader curr
+    _textureShaderProgram = new CSCI441::ShaderProgram("shaders/textureShader.v.glsl", "shaders/cartoonTextureShader.f.glsl" );
+    // _textureShaderProgram = new CSCI441::ShaderProgram("shaders/textureShader.v.glsl", "shaders/textureShader.f.glsl" );
+
     // query uniform locations
     _textureShaderUniformLocations.mvpMatrix       = _textureShaderProgram->getUniformLocation("mvpMatrix");
     _textureShaderUniformLocations.textureMap      = _textureShaderProgram->getUniformLocation("textureMap");

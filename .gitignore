@@ -2,6 +2,7 @@
 .idea
 *.log
 tmp/
+.cache/
 
 # cmake stuff beyond CMakeLists.txt
 CMakeLists.txt.user
@@ -22,5 +23,6 @@ Makefile
 
 # compiled bin file
 MP
+FP
 
 www
