@@ -276,6 +276,7 @@ private:
     int frame = 0;
     int iterator = -100;
     bool isBoosting = false;
+    bool isLeft = false;
 
     void _renderSkybox(glm::mat4 viewMtx, glm::mat4 projMtx);
 };

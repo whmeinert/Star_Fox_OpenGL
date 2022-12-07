@@ -62,7 +62,18 @@ void FPEngine::handleKeyEvent(GLint key, GLint action) {
                 break;
             case GLFW_KEY_E:
                 _fpCam->recomputeOrientation();
-                _lasers[_nextLaser].laserPos = _fpCam->getPosition() + glm::vec3(0.0f, -15.0f, 0.0f);
+                if (!isLeft) {
+                    _lasers[_nextLaser].laserPos =
+                            glm::vec3(_fpCam->getPosition().x * (1.5), _fpCam->getPosition().y * 1.5,
+                                      _fpCam->getPosition().z) + glm::vec3(2.0f, -.5f, -10.0f);
+                    isLeft = !isLeft;
+                }
+                else {
+                    _lasers[_nextLaser].laserPos =
+                            glm::vec3(_fpCam->getPosition().x * (1.5), _fpCam->getPosition().y * 1.5,
+                                      _fpCam->getPosition().z) + glm::vec3(-2.0f, -.5f, -10.0f);
+                    isLeft = !isLeft;
+                }
                 _lasers[_nextLaser].laserDir = glm::normalize(_fpCam->getLookAtPoint() - _fpCam->getPosition());
                 _nextLaser++;
                 if(_nextLaser == _maxLasers) {
@@ -109,8 +120,8 @@ void FPEngine::handleCursorPositionEvent(glm::vec2 currMousePosition) {
         // otherwise, update our camera angles theta & phi
         else {
             // rotate the camera by the distance the mouse moved
-            //_arcballCam->rotate((currMousePosition.x - _mousePosition.x) * 0.005f,
-            //                    (_mousePosition.y - currMousePosition.y) * 0.005f);
+            _arcballCam->rotate((currMousePosition.x - _mousePosition.x) * 0.005f,
+                                (_mousePosition.y - currMousePosition.y) * 0.005f);
         }
 
         // ensure shader program is not null
@@ -528,8 +539,18 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) {
 
     //printf("%f, %f, %f | %f, %f, %f\n", viewMtx[0].x, viewMtx[0].y, viewMtx[0].z, modelMtx[2].x, modelMtx[2].y, modelMtx[2].z);
 
-    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.doShading, 0.0f);
 
+
+    // Top
+    modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -20.0f, 0.0f));
+    modelMatrix = glm::scale(modelMatrix, glm::vec3(20.0f));
+    glm::mat4 mvpMtx = projMtx * viewMtx * modelMatrix;
+    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.mvpMatrix, mvpMtx);
+    glBindTexture(GL_TEXTURE_2D, _texHandles[TEXTURE_ID::BACK]);
+    glBindVertexArray( _vaos[VAO_ID::PLATFORM] );
+    glDrawElements(GL_TRIANGLE_STRIP, _numVAOPoints[VAO_ID::PLATFORM], GL_UNSIGNED_SHORT, (void*)0 );
+
+    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.doShading, 0.0f);
     // Draw lasers
     _flatShaderProgram->useProgram();
     CSCI441::setVertexAttributeLocations(_flatShaderProgramAttributeLocations.vPos);
@@ -625,15 +646,6 @@ void FPEngine::_renderSkybox(glm::mat4 viewMtx, glm::mat4 projMtx) {
     glBindVertexArray( _vaos[VAO_ID::SKYBOX] );
     glDrawElements(GL_TRIANGLE_STRIP, _numVAOPoints[VAO_ID::SKYBOX], GL_UNSIGNED_SHORT, (void*)0 );
 
-    // Top
-    modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -20.0f, 0.0f));
-    modelMatrix = glm::scale(modelMatrix, glm::vec3(20.0f));
-    mvpMtx = projMtx * viewMtx * modelMatrix;
-    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.mvpMatrix, mvpMtx);
-    glBindTexture(GL_TEXTURE_2D, _texHandles[TEXTURE_ID::BACK]);
-    glBindVertexArray( _vaos[VAO_ID::PLATFORM] );
-    glDrawElements(GL_TRIANGLE_STRIP, _numVAOPoints[VAO_ID::PLATFORM], GL_UNSIGNED_SHORT, (void*)0 );
-
     //// END DRAWING THE SKY BOX ////
 }
 
@@ -642,7 +654,7 @@ void FPEngine::_updateScene() {
     _fpCam->moveForward(0);
     _arcballCam->setLookAtPoint(_arcballCam->getLookAtPoint() - glm::vec3(0, 0, 2*_cameraSpeed.x));
     _arcballCam->recomputeOrientation();
-    _lightPos = _arcballCam->getPosition();
+    //_lightPos = _arcballCam->getPosition();
     iterator++;
     if (!isBoosting) {
         _cameraSpeed = glm::vec2(.15, .06);
