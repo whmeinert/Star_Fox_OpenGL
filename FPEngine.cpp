@@ -568,7 +568,6 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) {
 
     _hero.at(frame)->draw(_textureShaderProgram->getShaderProgramHandle());
 
-    printf("Hero at (%f, %f, %f)\n", _fpCam->getLookAtPoint().x, _fpCam->getLookAtPoint().y, _fpCam->getLookAtPoint().z);
     //printf("%f, %f, %f | %f, %f, %f\n", viewMtx[0].x, viewMtx[0].y, viewMtx[0].z, modelMtx[2].x, modelMtx[2].y, modelMtx[2].z);
 
 
