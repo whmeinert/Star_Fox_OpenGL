@@ -260,6 +260,14 @@ void FPEngine::_setupShaders() {
     _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.textureMap,0);
 
 
+    _glitchShaderProgram = new CSCI441::ShaderProgram("shaders/glitchShader.v.glsl", "shaders/glitchShader.f.glsl" );
+    // _textureShaderProgram = new CSCI441::ShaderProgram("shaders/textureShader.v.glsl", "shaders/textureShader.f.glsl" );
+
+    // query uniform locations
+    _glitchShaderUniformLocations.mvpMatrix       = _textureShaderProgram->getUniformLocation("mvpMatrix");
+
+    // query attribute locations
+    _glitchShaderAttributeLocations.vPos          = _textureShaderProgram->getAttributeLocation("vPos");
     // hook up the CSCI441 object library to our shader program - MUST be done after the shader is used and before the objects are drawn
     // if we have multiple shaders the flow would be:
     //      1) shader->useProgram()
@@ -444,6 +452,28 @@ void FPEngine::_setupScene() {
         _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.laserColor[i], _lasers[i].laserColor);
     }
 
+    // Enemies
+    Enemies enemy1;
+    enemy1.position = glm::vec3(0.0f, 10.0f, -200.0f);
+    enemy1.direction = glm::vec3(0.0f, 0.0f, 1.0f);
+    Enemies enemy2;
+    enemy2.position = glm::vec3(10.0f, 2.0f, -300.0f);
+    enemy2.direction = glm::vec3(0.0f, 0.0f, 1.0f);
+    Enemies enemy3;
+    enemy3.position = glm::vec3(-10.0f, 20.0f, -300.0f);
+    enemy3.direction = glm::vec3(0.0f, 0.0f, 1.0f);
+    Enemies enemy4;
+    enemy4.position = glm::vec3(-5.0f, 12.0f, -500.0f);
+    enemy4.direction = glm::vec3(0.0f, 0.0f, 1.0f);
+    Enemies enemy5;
+    enemy5.position = glm::vec3(5.0f, 8.0f, -600.0f);
+    enemy5.direction = glm::vec3(0.0f, 0.0f, 1.0f);
+    _enemies.push_back(enemy1);
+    _enemies.push_back(enemy2);
+    _enemies.push_back(enemy3);
+    _enemies.push_back(enemy4);
+    _enemies.push_back(enemy5);
+
 }
 
 //*************************************************************************************
@@ -455,6 +485,7 @@ void FPEngine::_cleanupShaders() {
     delete _gouraudShaderProgram;
     delete _flatShaderProgram;
     delete _textureShaderProgram;
+    delete _glitchShaderProgram;
 }
 
 void FPEngine::_cleanupBuffers() {
@@ -496,7 +527,7 @@ void FPEngine::_cleanupScene() {
 
 void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) {
     // if either shader program is null, do not continue any further to prevent run time errors
-    if(!_gouraudShaderProgram || !_flatShaderProgram || !_textureShaderProgram) {
+    if(!_gouraudShaderProgram || !_flatShaderProgram || !_textureShaderProgram ||!_glitchShaderProgram) {
         return;
     }
 
@@ -537,6 +568,7 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) {
 
     _hero.at(frame)->draw(_textureShaderProgram->getShaderProgramHandle());
 
+    printf("Hero at (%f, %f, %f)\n", _fpCam->getLookAtPoint().x, _fpCam->getLookAtPoint().y, _fpCam->getLookAtPoint().z);
     //printf("%f, %f, %f | %f, %f, %f\n", viewMtx[0].x, viewMtx[0].y, viewMtx[0].z, modelMtx[2].x, modelMtx[2].y, modelMtx[2].z);
 
 
@@ -562,6 +594,21 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) {
         _flatShaderProgram->setProgramUniform(_flatShaderProgramUniformLocations.mvpMatrix, mvpMatrix);
         CSCI441::drawSolidSphere(1.0f, 16, 16);
     }
+
+    // Enemies
+    _glitchShaderProgram->useProgram();
+    CSCI441::setVertexAttributeLocations(_glitchShaderAttributeLocations.vPos);
+    for(auto ix = _enemies.begin(); ix != _enemies.end(); ix++) {
+        modelMatrix = glm::mat4(1.0f);
+        modelMatrix = glm::translate(modelMatrix, ix->position);
+        mvpMatrix = projMtx * viewMtx * modelMatrix;
+        _glitchShaderProgram->setProgramUniform(_glitchShaderUniformLocations.mvpMatrix, mvpMatrix);
+
+        CSCI441::drawSolidSphere(2.0f, 8, 8);
+    }
+
+
+
     CSCI441::setVertexAttributeLocations(_textureShaderAttributeLocations.vPos,
                                          _textureShaderAttributeLocations.vNormal,
                                          _textureShaderAttributeLocations.vTexCoord);
@@ -785,6 +832,27 @@ void FPEngine::_updateScene() {
     for(int i = 0; i < _maxLasers; i++) {
         _lasers[i].laserPos += _laserSpeed * _lasers[i].laserDir;
         //TODO: add color if it changes
+    }
+
+    // Enemies
+    for(auto ix = _enemies.begin(); ix != _enemies.end(); ix++) {
+        // Move
+        ix->position += ix->direction * 0.1f;
+
+        // Collision
+        for(int i = 0; i < _maxLasers; i++) {
+            if(glm::distance(ix->position, _lasers[i].laserPos) < 1.0f + 3.0f) {
+                ix = _enemies.erase(ix);
+                ix--;
+                _lasers[i].laserPos = glm::vec3(10000.0f);
+                _lasers[i].laserDir = glm::vec3(1.0f);
+            }
+        }
+
+        // Behind player
+        if(ix->position.z > _fpCam->getLookAtPoint().z) {
+            ix->position.z -= 400.0f;
+        }
     }
 
 }

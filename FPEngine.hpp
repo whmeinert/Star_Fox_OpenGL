@@ -6,6 +6,7 @@
 #include <CSCI441/ShaderProgram.hpp>
 #include <CSCI441/ModelLoader.hpp>
 #include <CSCI441/FreeCam.hpp>
+#include <vector>
 
 class FPEngine : public CSCI441::OpenGLEngine {
 public:
@@ -174,6 +175,18 @@ private:
         GLint texCoord;
     } _textureShaderAttributeLocations;
 
+    CSCI441::ShaderProgram* _glitchShaderProgram = nullptr;   // the wrapper for our shader program
+    /// \desc stores the locations of all of our shader uniforms
+    struct GlitchShaderUniformLocations {
+        /// \desc precomputed MVP matrix location
+        GLint mvpMatrix;
+
+    } _glitchShaderUniformLocations;
+    /// \desc stores the locations of all of our shader attributes
+    struct GlitchShaderAttributeLocations {
+        /// \desc vertex position location
+        GLint vPos;
+    } _glitchShaderAttributeLocations;
     //***************************************************************************
     // Private Helper Functions
 
@@ -191,6 +204,12 @@ private:
             glm::vec3 laserPos;
             glm::vec3 laserDir;
         } _lasers[16];
+
+        struct Enemies {
+            glm::vec3 position;
+            glm::vec3 direction;
+        };
+        std::vector<Enemies> _enemies;
 
     /// \desc creates the platform object
     /// \param [in] vao VAO descriptor to bind
