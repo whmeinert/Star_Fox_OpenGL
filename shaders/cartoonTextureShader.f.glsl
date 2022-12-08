@@ -66,12 +66,14 @@ void main() {
       vec3 sunl = -normalize(sunDir);
       vec4 sunId = texel * sunColor * max(dot(sunl, fragmentNormal), 0);
       vec3 sunr = -sunl + 2 * dot(fragmentNormal, sunl) * fragmentNormal;
-      float sunAlpha = 2.0;
-      vec4 sunIs = texel * sunColor * pow(max(dot(normalize(cameraPos - vec3(fPos)), sunr), 0), sunAlpha);
+      float sunAlpha = 1.0;
+      float sunSpecularPercent = 0.6;
+      vec4 sunIs = texel * sunColor * pow(max(dot(normalize(cameraPos - vec3(fPos)), sunr), 0), sunAlpha) * sunSpecularPercent;
       float sunAmbientScale = 0.4;
       vec4 sunIa = texel * vec4(sunColor.xyz * sunAmbientScale, 1.0);
       // vec4 sunI = sunId + sunIs + sunIa;
-      vec4 sunI = sunId + sunIs + sunIa;
+      // vec4 sunI = sunId + sunIs + sunIa;
+      vec4 sunI = sunId + sunIa;
       totalI += sunI;
 
       vec3 laserAttenuation = vec3(1.0, 0.15, 0.0);
@@ -269,7 +271,7 @@ void main() {
      }
   }
 
-  float sSplits = 4.0;
+  float sSplits = 6.0;
   float sSplitAmt = 1.0/(sSplits - 1.0) / 2.0;
   for(float split = 0; split <= 1.0; split += sSplitAmt*2.0) {
      if(s < split + sSplitAmt) {

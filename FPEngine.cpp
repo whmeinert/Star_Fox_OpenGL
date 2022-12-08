@@ -426,7 +426,7 @@ void FPEngine::_setupScene() {
     glm::vec3 flatColor(1.0f, 1.0f, 1.0f);
     _flatShaderProgram->setProgramUniform(_flatShaderProgramUniformLocations.color, flatColor);
 
-    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.sunDir, glm::vec3(1.0f, -2.0f, 0.5f));
+    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.sunDir, glm::vec3(-2.0f, -2.0f, 0.5f));
     // _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.sunDir, glm::vec3(0.0f, 0.0f, -1.0f));
     _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.sunColor, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
     // _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.laserOneColor, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
@@ -507,7 +507,7 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) {
     // use the gouraud shader
     _textureShaderProgram->useProgram();
     _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.doShading, 1.0f);
-    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.cameraPos, _fpCam->getPosition());
+    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.cameraPos, _arcballCam->getPosition());
     _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.inverseVPMatrix, glm::inverse(projMtx * viewMtx));
 
     for(int i = 0; i < _maxLasers; i++) {
