@@ -91,8 +91,8 @@ private:
 
     /// \desc the arcball camera in our world
     CSCI441::ArcballCam* _arcballCam;
-    CSCI441::FreeCam* _fpCam;
-    CSCI441::FreeCam* _bezCam;
+    CSCI441::FreeCam* _modelCam;
+    CSCI441::FreeCam* _firstPersonCam;
 
 
     //***************************************************************************
@@ -296,8 +296,15 @@ private:
     int iterator = -100;
     bool isBoosting = false;
     bool isLeft = false;
+    float _groundPos = 0;
+    bool _firstPerson = false;
+    std::vector<GLint> _keyLog;
+    bool _eeActive = false;
+    bool _canMoveCam = false;
 
     void _renderSkybox(glm::mat4 viewMtx, glm::mat4 projMtx);
+
+    void _checkEE();
 };
 
 void A4_keyboard_callback(GLFWwindow *window, int key, int scancode, int action, int mods );

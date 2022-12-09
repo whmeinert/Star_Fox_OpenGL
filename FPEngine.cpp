@@ -39,6 +39,7 @@ void FPEngine::handleKeyEvent(GLint key, GLint action) {
         _keys[key] = ((action == GLFW_PRESS) || (action == GLFW_REPEAT));
 
     if(action == GLFW_PRESS) {
+        _keyLog.push_back(key);
         switch( key ) {
             // quit!
             case GLFW_KEY_Q:
@@ -61,20 +62,20 @@ void FPEngine::handleKeyEvent(GLint key, GLint action) {
                 isBoosting = !isBoosting;
                 break;
             case GLFW_KEY_E:
-                _fpCam->recomputeOrientation();
+                _modelCam->recomputeOrientation();
                 if (!isLeft) {
                     _lasers[_nextLaser].laserPos =
-                            glm::vec3(_fpCam->getPosition().x * (1.5), _fpCam->getPosition().y * 1.5,
-                                      _fpCam->getPosition().z) + glm::vec3(2.0f, -.5f, -10.0f);
+                            glm::vec3(_modelCam->getPosition().x, _modelCam->getPosition().y,
+                                      _modelCam->getPosition().z) + glm::vec3(2.0f, 0, -5.0f);
                     isLeft = !isLeft;
                 }
                 else {
                     _lasers[_nextLaser].laserPos =
-                            glm::vec3(_fpCam->getPosition().x * (1.5), _fpCam->getPosition().y * 1.5,
-                                      _fpCam->getPosition().z) + glm::vec3(-2.0f, -.5f, -10.0f);
+                            glm::vec3(_modelCam->getPosition().x, _modelCam->getPosition().y,
+                                      _modelCam->getPosition().z) + glm::vec3(-2.0f, 0, -5.0f);
                     isLeft = !isLeft;
                 }
-                _lasers[_nextLaser].laserDir = glm::normalize(_fpCam->getLookAtPoint() - _fpCam->getPosition());
+                _lasers[_nextLaser].laserDir = glm::normalize(_modelCam->getLookAtPoint() - _modelCam->getPosition());
                 _nextLaser++;
                 if(_nextLaser == _maxLasers) {
                     _nextLaser = 0;
@@ -120,8 +121,10 @@ void FPEngine::handleCursorPositionEvent(glm::vec2 currMousePosition) {
         // otherwise, update our camera angles theta & phi
         else {
             // rotate the camera by the distance the mouse moved
-            _arcballCam->rotate((currMousePosition.x - _mousePosition.x) * 0.005f,
-                                (_mousePosition.y - currMousePosition.y) * 0.005f);
+            if (_canMoveCam) {
+                _arcballCam->rotate((currMousePosition.x - _mousePosition.x) * 0.005f,
+                                    (_mousePosition.y - currMousePosition.y) * 0.005f);
+            }
         }
 
         // ensure shader program is not null
@@ -264,10 +267,10 @@ void FPEngine::_setupShaders() {
     // _textureShaderProgram = new CSCI441::ShaderProgram("shaders/textureShader.v.glsl", "shaders/textureShader.f.glsl" );
 
     // query uniform locations
-    _glitchShaderUniformLocations.mvpMatrix       = _textureShaderProgram->getUniformLocation("mvpMatrix");
+    _glitchShaderUniformLocations.mvpMatrix       = _glitchShaderProgram->getUniformLocation("mvpMtx");
 
     // query attribute locations
-    _glitchShaderAttributeLocations.vPos          = _textureShaderProgram->getAttributeLocation("vPos");
+    _glitchShaderAttributeLocations.vPos          = _glitchShaderProgram->getAttributeLocation("vPos");
     // hook up the CSCI441 object library to our shader program - MUST be done after the shader is used and before the objects are drawn
     // if we have multiple shaders the flow would be:
     //      1) shader->useProgram()
@@ -402,18 +405,18 @@ void FPEngine::_setupScene() {
     _arcballCam->setPhi(M_PI/2);
     _arcballCam->setRadius(15.0f);
     _arcballCam->recomputeOrientation();
-    _fpCam = new CSCI441::FreeCam();
-    _fpCam->setPosition(glm::vec3(0.0f, 5.0f, 0.0f));
-    _fpCam->setTheta(0.0f);
-    _fpCam->setPhi(M_PI/2.0f);
-    _fpCam->setRadius(15.0f);
-    _fpCam->recomputeOrientation();
-    _bezCam = new CSCI441::FreeCam();
-    _bezCam->setPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-    _bezCam->setTheta(0.0f);
-    _bezCam->setPhi(0.0f);
-    _bezCam->setRadius(0.0f);
-    _bezCam->recomputeOrientation();
+    _modelCam = new CSCI441::FreeCam();
+    _modelCam->setPosition(glm::vec3(0.0f, 5.0f, 0.0f));
+    _modelCam->setTheta(0.0f);
+    _modelCam->setPhi(M_PI / 2.0f);
+    _modelCam->setRadius(15.0f);
+    _modelCam->recomputeOrientation();
+    _firstPersonCam = new CSCI441::FreeCam();
+    _firstPersonCam->setPosition(glm::vec3(0.0f, 7.0f, 0.0f));
+    _firstPersonCam->setTheta(0.0f);
+    _firstPersonCam->setPhi(M_PI / 2.0f);
+    _firstPersonCam->setRadius(15.0f);
+    _firstPersonCam->recomputeOrientation();
     _gouraudShaderProgram->setProgramUniform(_gouraudShaderProgramUniformLocations.eyePos, _arcballCam->getPosition());
 
     // set up light info
@@ -440,8 +443,8 @@ void FPEngine::_setupScene() {
     // _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.laserOneColor, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
     // _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.laserOnePos, glm::vec3(0.0f, 5.0f, -100.0f));
 
-    glm::vec3 laserPos = glm::vec3(10000.0f);
-    glm::vec3 laserDir = glm::vec3(1.0f);
+    auto laserPos = glm::vec3(10000.0f);
+    auto laserDir = glm::vec3(1.0f);
     glm::vec4 laserColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
 
     for(int i = 0; i < _maxLasers; i++) {
@@ -519,6 +522,8 @@ void FPEngine::_cleanupTextures() {
 void FPEngine::_cleanupScene() {
     fprintf( stdout, "[INFO]: ...deleting scene...\n" );
     delete _arcballCam;
+    delete _modelCam;
+    delete _firstPersonCam;
 }
 
 //*************************************************************************************
@@ -549,31 +554,27 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) {
     glm::mat4 modelMtx(1.0f);
     //printf("%f, %f, %f | %f, %f, %f\n", viewMtx[0].x, viewMtx[0].y, viewMtx[0].z, modelMtx[0].x, modelMtx[0].y, modelMtx[0].z);
 
-    modelMtx = glm::translate(modelMtx, _fpCam->getLookAtPoint());
+    modelMtx = glm::translate(modelMtx, _modelCam->getLookAtPoint());
     // rotate the plane with our camera theta direction (we need to rotate the opposite direction so that we always look at the back)
     modelMtx = glm::rotate(modelMtx, _angleX, CSCI441::Y_AXIS);
     modelMtx = glm::rotate(modelMtx, _angleZ, CSCI441::Z_AXIS);
     // rotate the plane with our camera phi direction
-    modelMtx = glm::rotate(modelMtx, _fpCam->getPhi(), -glm::cross(_fpCam->getPosition()-_fpCam->getLookAtPoint(), _fpCam->getUpVector()));
+    modelMtx = glm::rotate(modelMtx, _modelCam->getPhi(), -glm::cross(_modelCam->getPosition() - _modelCam->getLookAtPoint(), _modelCam->getUpVector()));
 
     modelMtx = glm::rotate( modelMtx, glm::radians(180.0f), CSCI441::Y_AXIS );
     modelMtx = glm::rotate( modelMtx, glm::radians(90.0f), CSCI441::X_AXIS );
     modelMtx = glm::scale(modelMtx, glm::vec3(1.5f));
     mvpMatrix = projMtx * viewMtx * modelMtx;
 
-
     _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.mvpMatrix, mvpMatrix);
     // draw our plane now
-
 
     _hero.at(frame)->draw(_textureShaderProgram->getShaderProgramHandle());
 
     //printf("%f, %f, %f | %f, %f, %f\n", viewMtx[0].x, viewMtx[0].y, viewMtx[0].z, modelMtx[2].x, modelMtx[2].y, modelMtx[2].z);
 
-
-
-    // Top
-    modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -20.0f, 0.0f));
+    // Ground
+    modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -20.0f, _groundPos));
     modelMatrix = glm::scale(modelMatrix, glm::vec3(20.0f));
     glm::mat4 mvpMtx = projMtx * viewMtx * modelMatrix;
     _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.mvpMatrix, mvpMtx);
@@ -618,10 +619,10 @@ void FPEngine::_renderSkybox(glm::mat4 viewMtx, glm::mat4 projMtx) {
     glm::mat4 projectionViewMatrix = projMtx * viewMtx;
     glm::mat4 mvpMatrix = projectionViewMatrix * modelMatrix;
 
-    // use the gouraud shader
+    // use the texture shader
     _textureShaderProgram->useProgram();
     _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.doShading, 1.0f);
-    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.cameraPos, _fpCam->getPosition());
+    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.cameraPos, _modelCam->getPosition());
     _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.inverseVPMatrix, glm::inverse(projMtx * viewMtx));
 
     for(int i = 0; i < _maxLasers; i++) {
@@ -634,9 +635,16 @@ void FPEngine::_renderSkybox(glm::mat4 viewMtx, glm::mat4 projMtx) {
     CSCI441::setVertexAttributeLocations(_textureShaderAttributeLocations.vPos,
                                          _textureShaderAttributeLocations.vNormal,
                                          _textureShaderAttributeLocations.vTexCoord);
+    glm::vec3 pos;
+    if (!_firstPerson){
+        pos = _arcballCam->getLookAtPoint();
+    }
+    else{
+        pos = _firstPersonCam->getPosition();
+    }
 
     modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 200.0f, 0.0f));
-    modelMatrix = glm::translate(modelMatrix, _arcballCam->getLookAtPoint());
+    modelMatrix = glm::translate(modelMatrix, pos);
     modelMatrix = glm::scale(modelMatrix, glm::vec3(20.0f));
     glm::mat4 mvpMtx = projMtx * viewMtx * modelMatrix;
     _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.mvpMatrix, mvpMtx);
@@ -646,7 +654,7 @@ void FPEngine::_renderSkybox(glm::mat4 viewMtx, glm::mat4 projMtx) {
 
     // Right
     modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(200.0f, 0.0f, 0.0f));
-    modelMatrix = glm::translate(modelMatrix, _arcballCam->getLookAtPoint());
+    modelMatrix = glm::translate(modelMatrix, pos);
     modelMatrix = glm::rotate(modelMatrix, glm::radians(-90.0f), CSCI441::Y_AXIS);
     modelMatrix = glm::rotate(modelMatrix, glm::radians(-90.0f), CSCI441::X_AXIS);
     modelMatrix = glm::scale(modelMatrix, glm::vec3(20.0f));
@@ -658,7 +666,7 @@ void FPEngine::_renderSkybox(glm::mat4 viewMtx, glm::mat4 projMtx) {
 
     // Back
     modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 200.0f));
-    modelMatrix = glm::translate(modelMatrix, _arcballCam->getLookAtPoint());
+    modelMatrix = glm::translate(modelMatrix, pos);
     modelMatrix = glm::rotate(modelMatrix, glm::radians(-90.0f), CSCI441::X_AXIS);
     modelMatrix = glm::rotate(modelMatrix, glm::radians(-180.0f), CSCI441::Z_AXIS);
     modelMatrix = glm::scale(modelMatrix, glm::vec3(20.0f));
@@ -670,7 +678,7 @@ void FPEngine::_renderSkybox(glm::mat4 viewMtx, glm::mat4 projMtx) {
 
     // Front
     modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -200.0f));
-    modelMatrix = glm::translate(modelMatrix, _arcballCam->getLookAtPoint());
+    modelMatrix = glm::translate(modelMatrix, pos);
     modelMatrix = glm::rotate(modelMatrix, glm::radians(-90.0f), CSCI441::X_AXIS);
     //modelMatrix = glm::rotate(modelMatrix, glm::radians(-180.0f), CSCI441::Z_AXIS);
     modelMatrix = glm::scale(modelMatrix, glm::vec3(20.0f));
@@ -682,7 +690,7 @@ void FPEngine::_renderSkybox(glm::mat4 viewMtx, glm::mat4 projMtx) {
 
     // Front
     modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-200.0f, 0.0f, 0.0f));
-    modelMatrix = glm::translate(modelMatrix, _arcballCam->getLookAtPoint());
+    modelMatrix = glm::translate(modelMatrix, pos);
     modelMatrix = glm::rotate(modelMatrix, glm::radians(90.0f), CSCI441::Y_AXIS);
     modelMatrix = glm::rotate(modelMatrix, glm::radians(-90.0f), CSCI441::X_AXIS);
     modelMatrix = glm::scale(modelMatrix, glm::vec3(20.0f));
@@ -696,11 +704,32 @@ void FPEngine::_renderSkybox(glm::mat4 viewMtx, glm::mat4 projMtx) {
 }
 
 void FPEngine::_updateScene() {
-    _fpCam->setPosition(_fpCam->getPosition() - glm::vec3(0, 0, 2*_cameraSpeed.x));
-    _fpCam->moveForward(0);
+    _modelCam->setPosition(_modelCam->getPosition() - glm::vec3(0, 0, 2 * _cameraSpeed.x));
+    _modelCam->moveForward(0);
     _arcballCam->setLookAtPoint(_arcballCam->getLookAtPoint() - glm::vec3(0, 0, 2*_cameraSpeed.x));
     _arcballCam->recomputeOrientation();
-    //_lightPos = _arcballCam->getPosition();
+    _firstPersonCam->setLookAtPoint(_modelCam->getLookAtPoint());
+    _firstPersonCam->setPosition(_modelCam->getPosition() + glm::vec3(0, 2, 0));
+    _firstPersonCam->setTheta(_firstPersonCam->getTheta() + _angleX);
+    _firstPersonCam->moveForward(0);
+
+    if (!_eeActive) {
+        _checkEE();
+    }
+    else{
+        _angleZ += .04f;
+        if (_angleZ > 2*M_PI){
+            printf("Do a barrel roll!");
+            _angleZ = 0;
+            _eeActive = false;
+            _keyLog.clear();
+        }
+    }
+
+    int z = _modelCam->getPosition().z;
+    if (z % 1000 == 0 && z != 0){
+        _groundPos = 1000 * z/1000;
+    }
     iterator++;
     if (!isBoosting) {
         _cameraSpeed = glm::vec2(.15, .06);
@@ -719,13 +748,13 @@ void FPEngine::_updateScene() {
         }
     }
 
-    position = _fpCam->getPosition();
+    position = _modelCam->getPosition();
     // turn right
     if (_keys[GLFW_KEY_D]) {
         if(position.x < 12) {
-            //_fpCam->moveForward(_cameraSpeed.x);
-            _fpCam->setPosition(_fpCam->getPosition() - glm::vec3(-_cameraSpeed.x, 0, 0));
-            _fpCam->moveForward(0);
+            //_modelCam->moveForward(_cameraSpeed.x);
+            _modelCam->setPosition(_modelCam->getPosition() - glm::vec3(-_cameraSpeed.x, 0, 0));
+            _modelCam->moveForward(0);
             if (position.x > 10) {
                 _arcballCam->setLookAtPoint(_arcballCam->getLookAtPoint() + glm::vec3(_cameraSpeed.y,0,0));
                 _arcballCam->recomputeOrientation();
@@ -743,9 +772,9 @@ void FPEngine::_updateScene() {
     // turn left
     if (_keys[GLFW_KEY_A]) {
         if(position.x > -12) {
-            //_fpCam->moveForward(_cameraSpeed.x);
-            _fpCam->setPosition(_fpCam->getPosition() - glm::vec3(_cameraSpeed.x, 0, 0));
-            _fpCam->moveForward(0);
+            //_modelCam->moveForward(_cameraSpeed.x);
+            _modelCam->setPosition(_modelCam->getPosition() - glm::vec3(_cameraSpeed.x, 0, 0));
+            _modelCam->moveForward(0);
             if (position.x > 10) {
                 _arcballCam->setLookAtPoint(_arcballCam->getLookAtPoint() - glm::vec3(_cameraSpeed.y,0,0));
                 _arcballCam->recomputeOrientation();
@@ -763,8 +792,8 @@ void FPEngine::_updateScene() {
     // move forward
     if (_keys[GLFW_KEY_W]) {
         if(position.y < 15) {
-            _fpCam->setPosition(_fpCam->getPosition() - glm::vec3(0, -_cameraSpeed.x, 0));
-            _fpCam->moveForward(0);
+            _modelCam->setPosition(_modelCam->getPosition() - glm::vec3(0, -_cameraSpeed.x, 0));
+            _modelCam->moveForward(0);
             if (position.y > 10) {
                 _arcballCam->setLookAtPoint(_arcballCam->getLookAtPoint() + glm::vec3(0,_cameraSpeed.y,0));
                 _arcballCam->recomputeOrientation();
@@ -773,16 +802,16 @@ void FPEngine::_updateScene() {
                 _arcballCam->setLookAtPoint(_arcballCam->getLookAtPoint() + glm::vec3(0,_cameraSpeed.y,0));
                 _arcballCam->recomputeOrientation();
             }
-            if (_fpCam->getPhi() < (2.130796)) {
-                _fpCam->rotate(0.0f, 0.02f);
+            if (_modelCam->getPhi() < (2.130796)) {
+                _modelCam->rotate(0.0f, 0.02f);
             }
         }
     }
     // move backward
     if (_keys[GLFW_KEY_S]) {
         if(position.y > -10) {
-            _fpCam->setPosition(_fpCam->getPosition() - glm::vec3(0, _cameraSpeed.x, 0));
-            _fpCam->moveForward(0);
+            _modelCam->setPosition(_modelCam->getPosition() - glm::vec3(0, _cameraSpeed.x, 0));
+            _modelCam->moveForward(0);
             if (position.y < 5) {
                 _arcballCam->setLookAtPoint(_arcballCam->getLookAtPoint() - glm::vec3(0,_cameraSpeed.y,0));
                 _arcballCam->recomputeOrientation();
@@ -791,23 +820,25 @@ void FPEngine::_updateScene() {
                 _arcballCam->setLookAtPoint(_arcballCam->getLookAtPoint() - glm::vec3(0,_cameraSpeed.y,0));
                 _arcballCam->recomputeOrientation();
             }
-            if (_fpCam->getPhi() > (M_PI)/4.0f) {
-                _fpCam->rotate(-0.0f, -0.02f);
+            if (_modelCam->getPhi() > (M_PI) / 4.0f) {
+                _modelCam->rotate(-0.0f, -0.02f);
             }
         }
     }
 
+    // reset angle to face forward
     if(!_keys[GLFW_KEY_S] && !_keys[GLFW_KEY_W]) {
-        if (_fpCam->getPhi() != M_PI/2) {
-            if (_fpCam->getPhi() > M_PI/2) {
-                _fpCam->rotate(0.0f, -0.02f);
+        if (_modelCam->getPhi() != M_PI / 2) {
+            if (_modelCam->getPhi() > M_PI / 2) {
+                _modelCam->rotate(0.0f, -0.02f);
             }
-            if (_fpCam->getPhi() < M_PI/2) {
-                _fpCam->rotate(0.0f, 0.02f);
+            if (_modelCam->getPhi() < M_PI / 2) {
+                _modelCam->rotate(0.0f, 0.02f);
             }
         }
     }
 
+    // reset angle to face forward
     if(!_keys[GLFW_KEY_A] && !_keys[GLFW_KEY_D]) {
         if (_angleX != 0) {
             if (_angleX > 0) {
@@ -818,13 +849,24 @@ void FPEngine::_updateScene() {
             }
         }
         if (_angleZ != 0) {
-            if (_angleZ > 0) {
+            if (_angleZ > 0 && !_eeActive) {
                 _angleZ += -0.02f;
             }
-            if (_angleZ < 0) {
+            if (_angleZ < 0 && !_eeActive) {
                 _angleZ += 0.02f;
             }
         }
+    }
+
+    // Change camera
+    if (_keys[GLFW_KEY_1]) {
+        _firstPerson = false;
+    }
+    if (_keys[GLFW_KEY_2]) {
+        _firstPerson = true;
+    }
+    if (_keys[GLFW_KEY_0]) {
+        _canMoveCam = !_canMoveCam;
     }
 
     // Lasers
@@ -841,7 +883,7 @@ void FPEngine::_updateScene() {
         // Collision
         for(int i = 0; i < _maxLasers; i++) {
             if(glm::distance(ix->position, _lasers[i].laserPos) < 1.0f + 3.0f) {
-                ix = _enemies.erase(ix);
+                ix->position.z -= 400.0f;
                 ix--;
                 _lasers[i].laserPos = glm::vec3(10000.0f);
                 _lasers[i].laserDir = glm::vec3(1.0f);
@@ -849,7 +891,7 @@ void FPEngine::_updateScene() {
         }
 
         // Behind player
-        if(ix->position.z > _fpCam->getLookAtPoint().z) {
+        if(ix->position.z > _modelCam->getLookAtPoint().z) {
             ix->position.z -= 400.0f;
         }
     }
@@ -884,7 +926,13 @@ void FPEngine::run() {
         glm::mat4 projectionMatrix = glm::perspective( 45.0f, (GLfloat) framebufferWidth / (GLfloat) framebufferHeight, 0.001f, 1000.0f );
 
         // set up our look at matrix to position our camera
-        glm::mat4 viewMatrix = _arcballCam->getViewMatrix();
+        glm::mat4 viewMatrix;
+        if (!_firstPerson) {
+            viewMatrix = _arcballCam->getViewMatrix();
+        }
+        else {
+            viewMatrix = _firstPersonCam->getViewMatrix();
+        }
 
         glDisable(GL_DEPTH_TEST);
         _renderSkybox(viewMatrix, projectionMatrix);
@@ -897,6 +945,81 @@ void FPEngine::run() {
 
         glfwSwapBuffers(_window);                       // flush the OpenGL commands and make sure they get rendered!
         glfwPollEvents();				                // check for any events and signal to redraw screen
+    }
+}
+
+void FPEngine::_checkEE() {
+    // Correct key input is up, up, down, down, left, right, left, right, A, B (using arrows keys for directions)
+    if(!_keyLog.empty() ) {
+        if (_keyLog.at(0) == GLFW_KEY_UP) {
+            if(_keyLog.size() > 1 ) {
+                if(_keyLog.at(1) == GLFW_KEY_UP){
+                    if(_keyLog.size() > 2 ) {
+                        if(_keyLog.at(2) == GLFW_KEY_DOWN){
+                            if(_keyLog.size() > 3 ) {
+                                if(_keyLog.at(3) == GLFW_KEY_DOWN){
+                                    if(_keyLog.size() > 4 ) {
+                                        if(_keyLog.at(4) == GLFW_KEY_LEFT){
+                                            if(_keyLog.size() > 5 ) {
+                                                if(_keyLog.at(5) == GLFW_KEY_RIGHT){
+                                                    if(_keyLog.size() > 6 ) {
+                                                        if(_keyLog.at(6) == GLFW_KEY_LEFT){
+                                                            if(_keyLog.size() > 7 ) {
+                                                                if(_keyLog.at(7) == GLFW_KEY_RIGHT){
+                                                                    if(_keyLog.size() > 8 ) {
+                                                                        if(_keyLog.at(8) == GLFW_KEY_A){
+                                                                            if(_keyLog.size() > 9 ) {
+                                                                                if(_keyLog.at(9) == GLFW_KEY_B){
+                                                                                    _eeActive = true;
+                                                                                }
+                                                                                else {
+                                                                                    _keyLog.clear();
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                        else {
+                                                                            _keyLog.clear();
+                                                                        }
+                                                                    }
+                                                                }
+                                                                else {
+                                                                    _keyLog.clear();
+                                                                }
+                                                            }
+                                                        }
+                                                        else {
+                                                            _keyLog.clear();
+                                                        }
+                                                    }
+                                                }
+                                                else {
+                                                    _keyLog.clear();
+                                                }
+                                            }
+                                        }
+                                        else {
+                                            _keyLog.clear();
+                                        }
+                                    }
+                                }
+                                else {
+                                    _keyLog.clear();
+                                }
+                            }
+                        }
+                        else {
+                            _keyLog.clear();
+                        }
+                    }
+                }
+                else {
+                    _keyLog.clear();
+                }
+            }
+        }
+        else {
+            _keyLog.clear();
+        }
     }
 }
 
